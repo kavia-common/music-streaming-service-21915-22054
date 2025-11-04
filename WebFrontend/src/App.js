@@ -8,6 +8,9 @@ import RegisterForm from "./components/Auth/RegisterForm";
 import PlaylistList from "./components/Playlists/PlaylistList";
 import PlaylistDetail from "./components/Playlists/PlaylistDetail";
 import PlaylistEditor from "./components/Playlists/PlaylistEditor";
+import SearchBar from "./components/Catalog/SearchBar";
+import SearchResults from "./components/Catalog/SearchResults";
+import { searchCatalog, addTrackToPlaylistPlaceholder } from "./api/catalog";
 
 // Placeholder pages (scaffold only)
 function Home() {
@@ -36,10 +39,85 @@ function Home() {
 }
 
 function Search() {
+  const [params, setParams] = React.useState({ query: "", genre: "", artist: "", album: "" });
+  const [results, setResults] = React.useState([]);
+  const [page, setPage] = React.useState(1);
+  const [pageSize] = React.useState(10);
+  const [total, setTotal] = React.useState(undefined);
+  const [loading, setLoading] = React.useState(false);
+  const [err, setErr] = React.useState("");
+
+  const performSearch = async (override = {}) => {
+    const nextParams = { ...params, ...override };
+    // Reset to first page when filters change
+    const nextPage = override && Object.keys(override).length > 0 ? 1 : page;
+    if (!nextParams.query?.trim()) {
+      setResults([]);
+      setTotal(undefined);
+      setErr("");
+      return;
+    }
+    setLoading(true);
+    setErr("");
+    try {
+      const data = await searchCatalog({ ...nextParams, page: nextPage, pageSize });
+      // The backend may return { items, total } or just an array. Normalize.
+      const items = Array.isArray(data) ? data : (data.items || data.results || []);
+      const t = typeof data?.total === "number" ? data.total : undefined;
+      setResults(items);
+      setTotal(t);
+      setParams(nextParams);
+      setPage(nextPage);
+    } catch (e) {
+      setErr(e?.data?.detail || e?.message || "Search failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSearch = (newParams) => {
+    performSearch(newParams);
+  };
+
+  const onPrev = () => {
+    if (page <= 1) return;
+    setPage((p) => p - 1);
+    performSearch();
+  };
+
+  const onNext = () => {
+    setPage((p) => p + 1);
+    performSearch();
+  };
+
+  const onAddToPlaylist = async (item) => {
+    // Placeholder UX: show prompt for playlist ID and call placeholder API.
+    const pid = window.prompt("Enter playlist ID to add this track to:");
+    if (!pid) return;
+    const trackId = item.id || item.track_id || item.uuid || item.title || "";
+    try {
+      await addTrackToPlaylistPlaceholder(pid, trackId);
+      window.alert("Track added to playlist (placeholder).");
+    } catch (e) {
+      window.alert(e?.data?.detail || e?.message || "Failed to add track.");
+    }
+  };
+
   return (
     <div className="container">
       <h2>Search</h2>
-      <p className="card">Search UI will be implemented later.</p>
+      <SearchBar initial={params} onSearch={onSearch} />
+      <SearchResults
+        results={results}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        loading={loading}
+        error={err}
+        onPrev={onPrev}
+        onNext={onNext}
+        onAddToPlaylist={onAddToPlaylist}
+      />
     </div>
   );
 }
