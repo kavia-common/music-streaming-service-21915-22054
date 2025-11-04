@@ -1,82 +1,111 @@
-# Lightweight React Template for KAVIA
+# WebFrontend (React) for Music Streaming Service
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A modern, lightweight React app that provides the UI for the music streaming platform:
+- Authentication (login/register)
+- Catalog search
+- Playlists (list, create, edit, delete, add/remove tracks)
+- Recommendations
+- Streaming controls (via start/stop endpoints, wired in player hook)
+- Admin panels (users and music)
 
-## Features
+This app communicates with the Backend API via REST using axios, with Create React App (CRA) dev proxy for local development.
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+## Quickstart
 
-## Getting Started
+1) Install dependencies
+- npm install
 
-In the project directory, you can run:
+2) Configure environment variables
+- Copy .env.example to .env and adjust as needed
+- See "Environment variables" section below
 
-### `npm start`
+3) Start the dev server
+- npm start
+- App runs at http://localhost:3000
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4) Backend notes
+- During local dev, requests to /api/* are proxied to http://localhost:8000 by default (configurable)
+- Ensure your backend exposes the expected endpoints (see "Backend endpoints" below)
 
-### `npm test`
+## Environment variables
 
-Launches the test runner in interactive watch mode.
+Create a .env file in this directory (based on .env.example). The following variables are supported:
 
-### `npm run build`
+- REACT_APP_API_BASE_URL
+  - Base URL used by axios (src/api/client.js).
+  - If empty, axios uses same-origin, and CRA dev proxy will forward /api/* to the backend target.
+  - Example (direct calls, bypass proxy): REACT_APP_API_BASE_URL=http://localhost:8000
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- REACT_APP_OBS_ENABLED
+  - Feature flag to toggle observability/monitoring features in the frontend (planned integration).
+  - Example: REACT_APP_OBS_ENABLED=false
+
+- REACT_APP_OBS_BASE_URL
+  - Observability backend base URL if observability is enabled.
+  - Example: REACT_APP_OBS_BASE_URL=http://localhost:9000
+
+Optional (dev proxy control):
+- BACKEND_PROXY_TARGET
+  - Used only by CRA dev server via src/setupProxy.js
+  - Default: http://localhost:8000
+  - Example: BACKEND_PROXY_TARGET=http://localhost:8001
+
+Tip:
+- Use the proxy for local development (leave REACT_APP_API_BASE_URL blank) and set BACKEND_PROXY_TARGET if your backend is not on :8000.
+
+## Local development
+
+- npm install
+- npm start
+  - Opens http://localhost:3000
+  - CRA dev proxy forwards /api/* → BACKEND_PROXY_TARGET (default http://localhost:8000)
+- npm test
+  - Runs tests in CI-friendly non-watch mode
+- npm run build
+  - Produces production build in build/
+
+## Backend endpoints
+
+The frontend expects the backend to expose endpoints (proxied under /api/* in dev):
+- Auth:
+  - POST /api/auth/login
+  - POST /api/auth/register
+- Playlists:
+  - GET /api/playlists
+  - POST /api/playlists
+  - GET /api/playlists/:id
+  - PATCH /api/playlists/:id
+  - DELETE /api/playlists/:id
+- Catalog:
+  - GET /api/catalog/search?query=...&genre=...&artist=...&album=...
+- Recommendations:
+  - GET /api/recommendations
+- Streaming:
+  - POST /api/stream/start
+  - POST /api/stream/stop
+- Admin:
+  - GET /api/admin/users
+  - POST /api/admin/music
+
+These routes are consumed by the API helper modules in src/api/* and by hooks/components throughout the app.
+
+## Proxy notes
+
+- The dev proxy is defined in src/setupProxy.js and uses http-proxy-middleware.
+- Default target is http://localhost:8000. Override with BACKEND_PROXY_TARGET env var.
+- If you set REACT_APP_API_BASE_URL, axios will call that directly and the proxy is bypassed.
 
 ## Customization
 
-### Colors
+- Colors and theme tokens are defined in src/App.css
+- No UI framework; components use plain CSS for performance and simplicity
 
-The main brand colors are defined as CSS variables in `src/App.css`:
+## Troubleshooting
 
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
-
-### Components
-
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
-
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
-
-## Learn More
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- API 404/401 locally:
+  - Verify backend is running and endpoints match the paths above.
+  - If bypassing proxy, ensure REACT_APP_API_BASE_URL points to the backend.
+  - If using proxy, ensure BACKEND_PROXY_TARGET is correct (or unset to use default).
+- CORS issues:
+  - Prefer using the CRA proxy in development (leave REACT_APP_API_BASE_URL blank).
+  - If calling backend directly, configure CORS on the backend accordingly.
