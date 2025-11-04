@@ -14,7 +14,7 @@ It uses:
 - Pydantic for request/response models
 - python-jose for JWT
 - bcrypt for password hashing
-- CORS configurable via env
+- CORS configurable via env (CORS_ORIGINS). If unset, backend defaults to permissive CORS in dev to simplify local testing.
 
 Run locally on 0.0.0.0:8000 by default.
 
@@ -51,6 +51,10 @@ alembic downgrade -1
 ```
 python -m scripts.seed_demo_data
 ```
+
+5) (Optional) Add demo audio files
+- Place MP3 files in BackendAPI/app/static/audio/, named as {trackId}.mp3 (e.g., 1.mp3).
+- The streaming start endpoint will return `/static/audio/{trackId}.mp3` as stream_url.
 
 5) Start the server
 ```
@@ -97,6 +101,9 @@ Note: Do not commit secrets. This repository includes .env.example only.
 - Streaming:
   - POST /api/stream/start   (body: { trackId })
   - POST /api/stream/stop    (body: { sessionId })
+  - Static audio served for demo with Range support: GET /static/audio/{filename}.mp3
+    - Place demo mp3 files under BackendAPI/app/static/audio/
+    - /api/stream/start returns stream_url pointing to /static/audio/{trackId}.mp3
 - Admin:
   - GET /api/admin/users
   - POST /api/admin/music
@@ -139,6 +146,8 @@ docker run --rm -p 8000:8000 --env-file ./.env music-backend:local
     - recommendations.py
     - stream.py
     - admin.py
+  - static/
+    - audio/           -> Put demo mp3 files here (e.g., 1.mp3). Served at /static/audio/{filename}
 
 ## Notes on Frontend integration
 

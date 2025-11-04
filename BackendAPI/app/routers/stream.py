@@ -1,6 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from pathlib import Path
 
 from app.db.session import get_db
 from app.db.models import StreamSession, Track, User
@@ -9,10 +10,19 @@ from app.dependencies import current_user
 
 router = APIRouter(prefix="/api/stream", tags=["Streaming"])
 
+STATIC_AUDIO_DIR = Path(__file__).resolve().parents[1] / "static" / "audio"
 
-@router.post("/start", response_model=StreamStartResponse, summary="Start music stream", description="Start a streaming session and return a stream URL")
+@router.post(
+    "/start",
+    response_model=StreamStartResponse,
+    summary="Start music stream",
+    description="Start a streaming session and return a stream URL. For demo, serves /static/audio/{trackId}.mp3 if available.",
+)
 def start_stream(payload: StreamStartRequest, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    """Create a streaming session for a track and return a mock stream URL."""
+    """
+    Create a streaming session for a track and return a stream URL.
+    For demo/local use, returns a URL under /static/audio/{trackId}.mp3 which supports Range requests.
+    """
     # Resolve track (allow numeric IDs, else fallback placeholder)
     track_id = payload.trackId
     track = None
@@ -24,7 +34,7 @@ def start_stream(payload: StreamStartRequest, user: User = Depends(current_user)
             db.add(track)
             db.flush()
     except Exception:
-        # Non-integer id: create a placeholder track if not exists (string IDs are not primary key in DB, so no direct mapping)
+        # Non-integer id: create a placeholder track if not exists
         track = db.query(Track).filter(Track.title == str(track_id)).first()
         if not track:
             track = Track(title=str(track_id), artist="Unknown")
@@ -36,8 +46,10 @@ def start_stream(payload: StreamStartRequest, user: User = Depends(current_user)
     db.commit()
     db.refresh(session)
 
-    # Mock a stream URL; in real life, generate signed URL or gateway path
-    stream_url = f"https://stream.example.com/audio/{track.id}.mp3"
+    # Prefer local static if file exists, else still return static path (frontend may 404 if missing)
+    candidate = STATIC_AUDIO_DIR / f"{track.id}.mp3"
+    # Use relative path served by FastAPI app (works with same-origin/proxy)
+    stream_url = f"/static/audio/{track.id}.mp3"
     return StreamStartResponse(session_id=session.id, track_id=str(track_id), stream_url=stream_url)
 
 
