@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import "./App.css";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
@@ -12,15 +12,17 @@ import SearchBar from "./components/Catalog/SearchBar";
 import SearchResults from "./components/Catalog/SearchResults";
 import { searchCatalog, addTrackToPlaylistPlaceholder } from "./api/catalog";
 import RecommendationsPanel from "./components/Recommendations/RecommendationsPanel";
+import PlayerBar from "./components/Player/PlayerBar";
+import { usePlayer } from "./hooks/usePlayer";
 
 // Placeholder pages (scaffold only)
 function Home() {
   const { isAuthenticated } = useAuth();
+  const { playTrack } = usePlayer();
 
-  // Placeholder play handler; in future integrate with a streaming controller/service
-  const onPlay = (item) => {
-    const title = item?.title || item?.name || "track";
-    window.alert(`Play "${title}" (placeholder)`);
+  // Real play handler using the streaming controller
+  const onPlay = async (item) => {
+    await playTrack(item);
   };
 
   // Reuse placeholder add-to-playlist logic similar to Search page
@@ -256,6 +258,8 @@ function App() {
         <Route path="/register" element={<RegisterForm />} />
         <Route path="*" element={<div className="container">Not found</div>} />
       </Routes>
+
+      {isAuthenticated && <PlayerBar />}
 
       <footer className="footer container">
         <span>© {new Date().getFullYear()} Music Streaming Service</span>
