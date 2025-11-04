@@ -5,6 +5,9 @@ import ProtectedRoute from "./components/Common/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import LoginForm from "./components/Auth/LoginForm";
 import RegisterForm from "./components/Auth/RegisterForm";
+import PlaylistList from "./components/Playlists/PlaylistList";
+import PlaylistDetail from "./components/Playlists/PlaylistDetail";
+import PlaylistEditor from "./components/Playlists/PlaylistEditor";
 
 // Placeholder pages (scaffold only)
 function Home() {
@@ -37,15 +40,6 @@ function Search() {
     <div className="container">
       <h2>Search</h2>
       <p className="card">Search UI will be implemented later.</p>
-    </div>
-  );
-}
-
-function Playlist() {
-  return (
-    <div className="container">
-      <h2>Playlists</h2>
-      <p className="card">Playlists UI will be implemented later.</p>
     </div>
   );
 }
@@ -123,13 +117,38 @@ function App() {
           path="/playlists"
           element={
             <ProtectedRoute>
-              <Playlist />
+              <PlaylistList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/playlists/new"
+          element={
+            <ProtectedRoute>
+              <PlaylistEditor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/playlists/:id"
+          element={
+            <ProtectedRoute>
+              <PlaylistDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/playlists/:id/edit"
+          element={
+            <ProtectedRoute>
+              <PlaylistEditor />
             </ProtectedRoute>
           }
         />
         <Route
           path="/admin"
           element={
+            /* Note: Admin remains protected and placeholder for now */
             <ProtectedRoute requireAdmin>
               <Admin />
             </ProtectedRoute>
