@@ -1,0 +1,2 @@
+Alembic migrations for BackendAPI.
+This directory contains the migration environment (env.py) and versioned migration scripts under versions/.

@@ -31,7 +31,28 @@ cp .env.example .env
 pip install -r requirements.txt
 ```
 
-3) Start the server
+3) Create database and run migrations (Alembic)
+- By default, DATABASE_URL uses SQLite: `sqlite:///./app.db`
+- To use Postgres, set `DATABASE_URL=postgresql+psycopg2://USER:PASS@HOST:PORT/DBNAME` in .env
+
+Common migration commands:
+```
+# Create DB schema to latest
+alembic upgrade head
+
+# If you change models and want a new migration (edit script afterwards if needed)
+alembic revision --autogenerate -m "your message"
+
+# Downgrade one step (use with care)
+alembic downgrade -1
+```
+
+4) (Optional) Seed demo data
+```
+python -m scripts.seed_demo_data
+```
+
+5) Start the server
 ```
 uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload
 ```
