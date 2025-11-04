@@ -14,6 +14,8 @@ import { searchCatalog, addTrackToPlaylistPlaceholder } from "./api/catalog";
 import RecommendationsPanel from "./components/Recommendations/RecommendationsPanel";
 import PlayerBar from "./components/Player/PlayerBar";
 import { usePlayer } from "./hooks/usePlayer";
+import UserAdmin from "./components/Admin/UserAdmin";
+import MusicAdmin from "./components/Admin/MusicAdmin";
 
 // Placeholder pages (scaffold only)
 function Home() {
@@ -148,7 +150,8 @@ function Admin() {
   return (
     <div className="container">
       <h2>Admin</h2>
-      <p className="card">Admin interface will be implemented later.</p>
+      <UserAdmin />
+      <MusicAdmin />
     </div>
   );
 }
