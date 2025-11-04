@@ -11,10 +11,30 @@ import PlaylistEditor from "./components/Playlists/PlaylistEditor";
 import SearchBar from "./components/Catalog/SearchBar";
 import SearchResults from "./components/Catalog/SearchResults";
 import { searchCatalog, addTrackToPlaylistPlaceholder } from "./api/catalog";
+import RecommendationsPanel from "./components/Recommendations/RecommendationsPanel";
 
 // Placeholder pages (scaffold only)
 function Home() {
   const { isAuthenticated } = useAuth();
+
+  // Placeholder play handler; in future integrate with a streaming controller/service
+  const onPlay = (item) => {
+    const title = item?.title || item?.name || "track";
+    window.alert(`Play "${title}" (placeholder)`);
+  };
+
+  // Reuse placeholder add-to-playlist logic similar to Search page
+  const onAddToPlaylist = async (item) => {
+    const pid = window.prompt("Enter playlist ID to add this track to:");
+    if (!pid) return;
+    const trackId = item.id || item.track_id || item.uuid || item.title || "";
+    try {
+      await addTrackToPlaylistPlaceholder(pid, trackId);
+      window.alert("Track added to playlist (placeholder).");
+    } catch (e) {
+      window.alert(e?.data?.detail || e?.message || "Failed to add track.");
+    }
+  };
 
   return (
     <div className="container">
@@ -30,9 +50,9 @@ function Home() {
           </p>
         </div>
       ) : (
-        <div className="card" style={{ marginTop: 16 }}>
-          <p>You are logged in.</p>
-        </div>
+        <>
+          <RecommendationsPanel onPlay={onPlay} onAddToPlaylist={onAddToPlaylist} />
+        </>
       )}
     </div>
   );
