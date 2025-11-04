@@ -3,11 +3,12 @@ import { http } from "./client";
 /**
  * Streaming API helpers to start and stop playback sessions.
  * Bridges WebFrontend routes (/api/stream/*) to BackendAPI endpoints.
+ * Backend returns canonical fields: { stream_url, session_id, track_id }
  */
 
 // PUBLIC_INTERFACE
 export async function startStream(trackId) {
-  /** Starts a streaming session for a track and returns { stream_url, session_id, ... } */
+  /** Starts a streaming session for a track and returns { stream_url, session_id, track_id } */
   if (!trackId) {
     throw { status: 400, message: "trackId is required" };
   }

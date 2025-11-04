@@ -95,13 +95,11 @@ export function usePlayer() {
         await stopStream(sessionId);
       }
     } catch (e) {
-      // eslint-disable-next-line no-console
       if (process.env.NODE_ENV !== "production") console.error("[Player stop error]", e);
       setError(e?.data?.detail || e?.message || "Failed to stop stream");
     } finally {
       setSessionId(null);
       setIsPlaying(false);
-      // keep currentTrack to allow UI to show last played, or clear if desired
     }
   }, [sessionId]);
 
@@ -112,6 +110,7 @@ export function usePlayer() {
        * - Stops any existing session
        * - Requests new stream URL
        * - Sets audio.src and plays
+       * Backend response fields used: { stream_url, session_id }
        */
       setError("");
       const tid = resolveTrackId(track);
@@ -127,7 +126,6 @@ export function usePlayer() {
           setSessionId(null);
         }
       } catch (e) {
-        // Soft fail: continue starting new session
         if (process.env.NODE_ENV !== "production") {
           // eslint-disable-next-line no-console
           console.warn("[Player] Failed to stop previous session", e);
@@ -136,13 +134,14 @@ export function usePlayer() {
 
       try {
         const data = await startStream(String(tid));
+        // Backend canonical: stream_url (primary), session_id (primary)
         const streamUrl = data?.stream_url || data?.url || data?.streamUrl;
-        const sid = data?.session_id || data?.sessionId;
+        const sid = data?.session_id ?? data?.sessionId ?? null;
         if (!streamUrl) {
           throw { message: "No stream URL returned", data, status: 500 };
         }
         setCurrentTrack(track);
-        setSessionId(sid || null);
+        setSessionId(sid);
 
         const el = audioRef.current;
         if (!el) throw { message: "Audio element not ready" };
@@ -152,7 +151,6 @@ export function usePlayer() {
 
         return { ok: true, sessionId: sid, streamUrl };
       } catch (e) {
-        // eslint-disable-next-line no-console
         if (process.env.NODE_ENV !== "production") console.error("[Player playTrack error]", e);
         setError(e?.data?.detail || e?.message || "Failed to start stream");
         setIsPlaying(false);
@@ -165,19 +163,18 @@ export function usePlayer() {
   const togglePlay = useCallback(async () => {
     /**
      * Toggle play/pause.
-     * - If no track loaded yet, do nothing (or could try to resume last).
-     * - When pausing, attempt to stop backend session to free resources.
+     * - If no track loaded yet, do nothing.
+     * - On pause, stop backend session to free resources.
      */
     setError("");
     const el = audioRef.current;
-    if (!el) return;
-    if (!el.src) return;
+    if (!el || !el.src) return;
 
     if (el.paused) {
       try {
         await el.play();
         setIsPlaying(true);
-      } catch (e) {
+      } catch {
         setError("Unable to resume playback");
       }
     } else {
@@ -188,7 +185,7 @@ export function usePlayer() {
           await stopStream(sessionId);
           setSessionId(null);
         }
-      } catch (e) {
+      } catch {
         setError("Unable to pause playback");
       }
     }

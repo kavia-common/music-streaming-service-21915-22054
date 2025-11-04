@@ -48,7 +48,8 @@ export function AuthProvider({ children }) {
     /**
      * Login against BackendAPI:
      * - POST /api/auth/login (proxy -> BackendAPI /auth/login)
-     * - Expect token in { token } or { access_token }
+     * - Expect token in { token } (primary) or { access_token } (fallback)
+     * - Normalize to our single 'token' concept for storage and Authorization header
      */
     setLoading(true);
     try {

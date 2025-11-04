@@ -26,8 +26,11 @@ export async function getPlaylist(id) {
 
 // PUBLIC_INTERFACE
 export async function updatePlaylist(id, payload) {
-  /** Updates playlist metadata: { name?, description?, cover_image? } */
-  // Prefer PATCH for partial updates; if backend only supports PUT, adjust accordingly.
+  /**
+   * Updates playlist with partial metadata and/or track operations.
+   * Backend PATCH body contract:
+   * - { name?, description?, cover_image?, add_tracks?: number[], remove_tracks?: number[] }
+   */
   return http.patch(`/api/playlists/${encodeURIComponent(id)}`, payload);
 }
 
@@ -39,12 +42,18 @@ export async function deletePlaylist(id) {
 
 // PUBLIC_INTERFACE
 export async function addTrackToPlaylist(id, trackId) {
-  /** Adds a track to the playlist. Backend convention assumed: PATCH with { add_tracks: [trackId] } */
-  return http.patch(`/api/playlists/${encodeURIComponent(id)}`, { add_tracks: [trackId] });
+  /**
+   * Adds a track to the playlist.
+   * Backend convention: PATCH body { add_tracks: [trackId] }
+   */
+  return http.patch(`/api/playlists/${encodeURIComponent(id)}`, { add_tracks: [Number(trackId)] });
 }
 
 // PUBLIC_INTERFACE
 export async function removeTrackFromPlaylist(id, trackId) {
-  /** Removes a track from the playlist. Backend convention assumed: PATCH with { remove_tracks: [trackId] } */
-  return http.patch(`/api/playlists/${encodeURIComponent(id)}`, { remove_tracks: [trackId] });
+  /**
+   * Removes a track from the playlist.
+   * Backend convention: PATCH body { remove_tracks: [trackId] }
+   */
+  return http.patch(`/api/playlists/${encodeURIComponent(id)}`, { remove_tracks: [Number(trackId)] });
 }

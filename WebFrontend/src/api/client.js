@@ -1,19 +1,13 @@
-//
-// API client for the WebFrontend
-// Uses axios with:
-// - Base URL from REACT_APP_API_BASE_URL
-// - Authorization header derived from the current auth token via useAuth()
-// - Graceful error handling and helper HTTP methods
-//
 import axios from "axios";
 
 /**
- * Reads API base URL from environment.
- * If not provided, falls back to same-origin (empty string) so CRA proxy can be used in dev.
+ * API client for the WebFrontend
+ * - Base URL from REACT_APP_API_BASE_URL (or same-origin for CRA proxy)
+ * - Authorization header is managed via setAuthToken(token) which sets Bearer <token>
+ * - Centralized response error normalization
  */
 const baseURL = process.env.REACT_APP_API_BASE_URL || "";
 
-// Create axios instance
 const api = axios.create({
   baseURL,
   withCredentials: false,
@@ -24,7 +18,10 @@ const api = axios.create({
 
 // PUBLIC_INTERFACE
 export function setAuthToken(token) {
-  /** Sets or clears the Authorization header (Bearer) on the shared axios instance. */
+  /**
+   * Sets or clears the Authorization header (Bearer) on the shared axios instance.
+   * Ensure the backend receives: Authorization: Bearer <JWT>
+   */
   if (token) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`;
   } else {
@@ -32,11 +29,9 @@ export function setAuthToken(token) {
   }
 }
 
-// Attach an interceptor to log responses in dev and surface errors consistently.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Normalize error shape
     const normalized = {
       status: error?.response?.status,
       data: error?.response?.data,
@@ -52,15 +47,10 @@ api.interceptors.response.use(
 
 // PUBLIC_INTERFACE
 export const http = {
-  /** Performs GET request */
   get: (url, config = {}) => api.get(url, config).then((r) => r.data),
-  /** Performs POST request */
   post: (url, data, config = {}) => api.post(url, data, config).then((r) => r.data),
-  /** Performs PUT request */
   put: (url, data, config = {}) => api.put(url, data, config).then((r) => r.data),
-  /** Performs PATCH request */
   patch: (url, data, config = {}) => api.patch(url, data, config).then((r) => r.data),
-  /** Performs DELETE request */
   delete: (url, config = {}) => api.delete(url, config).then((r) => r.data),
 };
 
