@@ -46,14 +46,17 @@ export function AuthProvider({ children }) {
   // PUBLIC_INTERFACE
   const login = useCallback(async (email, password) => {
     /**
-     * Minimal login flow:
-     * - POST to /api/auth/login (frontend-facing path as per work item)
-     * - Expect { token, user } or { access_token, ... }
+     * Login against BackendAPI:
+     * - POST /api/auth/login (proxy -> BackendAPI /auth/login)
+     * - Expect token in { token } or { access_token }
      */
     setLoading(true);
     try {
       const data = await http.post("/api/auth/login", { email, password });
       const receivedToken = data?.token || data?.access_token || "";
+      if (!receivedToken) {
+        throw { message: "No token returned from server", data, status: 500 };
+      }
       setToken(receivedToken);
       setUser(data?.user || null);
       return { ok: true };
@@ -69,7 +72,6 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       await http.post("/api/auth/register", { email, password, username });
-      // After registration, some apps auto-login; here we leave it to the caller to navigate to login.
       return { ok: true };
     } catch (err) {
       return { ok: false, error: err };

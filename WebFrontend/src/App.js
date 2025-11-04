@@ -3,12 +3,12 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import "./App.css";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
+import LoginForm from "./components/Auth/LoginForm";
+import RegisterForm from "./components/Auth/RegisterForm";
 
 // Placeholder pages (scaffold only)
 function Home() {
-  const { isAuthenticated, login, logout, loading } = useAuth();
-  const [email, setEmail] = useState("user@example.com");
-  const [password, setPassword] = useState("password");
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="container">
@@ -17,30 +17,15 @@ function Home() {
 
       {!isAuthenticated ? (
         <div className="card" style={{ marginTop: 16 }}>
-          <h3>Quick Login (scaffold)</h3>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              aria-label="email"
-              placeholder="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-              aria-label="password"
-              placeholder="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button className="btn" disabled={loading} onClick={() => login(email, password)}>
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </div>
+          <p>
+            You are currently browsing as a guest. Please{" "}
+            <NavLink to="/login">log in</NavLink> or{" "}
+            <NavLink to="/register">create an account</NavLink> to access all features.
+          </p>
         </div>
       ) : (
         <div className="card" style={{ marginTop: 16 }}>
           <p>You are logged in.</p>
-          <button className="btn" onClick={logout}>Logout</button>
         </div>
       )}
     </div>
@@ -103,9 +88,18 @@ function App() {
           Admin
         </NavLink>
         <div className="nav-spacer" />
-        <span style={{ opacity: 0.7, fontSize: 14 }}>
-          {isAuthenticated ? "Authenticated" : "Guest"}
-        </span>
+        {!isAuthenticated ? (
+          <>
+            <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : undefined)}>
+              Login
+            </NavLink>
+            <NavLink to="/register" className={({ isActive }) => (isActive ? "active" : undefined)}>
+              Register
+            </NavLink>
+          </>
+        ) : (
+          <span style={{ opacity: 0.7, fontSize: 14 }}>Account</span>
+        )}
         <button
           className="theme-toggle"
           onClick={toggleTheme}
@@ -141,6 +135,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
         <Route path="*" element={<div className="container">Not found</div>} />
       </Routes>
 
